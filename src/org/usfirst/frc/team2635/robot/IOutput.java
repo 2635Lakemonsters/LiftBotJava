@@ -4,7 +4,6 @@ public interface IOutput
 {
 	public Object getOutput();
 	
-	//TODO: More comments! (Infinite (Compiler ignores them))
 	
 	
 	
