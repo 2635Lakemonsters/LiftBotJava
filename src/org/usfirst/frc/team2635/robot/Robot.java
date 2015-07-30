@@ -4,7 +4,6 @@ package org.usfirst.frc.team2635.robot;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
-//TODO: Make robot not DTF
 
 /**
  * The VM is configured to automatically run this class, and to call the
@@ -19,6 +18,8 @@ public class Robot extends IterativeRobot
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
+	
+	OutputThread<JoystickData> xboxController = new OutputThread<JoystickData>(new JoystickRawOutput(0));
     public void robotInit() 
     {
     	
@@ -27,7 +28,8 @@ public class Robot extends IterativeRobot
     /**
      * This function is called periodically during autonomous
      */
-    public void autonomousPeriodic() {
+    public void autonomousPeriodic() 
+    {
 
     }
 
@@ -36,8 +38,14 @@ public class Robot extends IterativeRobot
      */
     public void teleopPeriodic() 
     {
-    	SmartDashboard.putNumber("test", (Double) joystickThread.getOutput());
-        
+        for(int i = 0; i < xboxController.getOutput().axes.size(); i++)
+        {
+        	SmartDashboard.putNumber("axis " + i, xboxController.getOutput().axes.get(i));
+        }
+        for(int i = 0; i < xboxController.getOutput().buttons.size(); i++)
+        {
+        	SmartDashboard.putBoolean("button " + i, xboxController.getOutput().buttons.get(i));
+        }
     }
     
     /**

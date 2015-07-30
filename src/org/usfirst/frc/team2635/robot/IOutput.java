@@ -1,8 +1,8 @@
 package org.usfirst.frc.team2635.robot;
 
-public interface IOutput 
+public interface IOutput<OutputType> 
 {
-	public Object getOutput();
+	public OutputType getOutput();
 	
 	
 	

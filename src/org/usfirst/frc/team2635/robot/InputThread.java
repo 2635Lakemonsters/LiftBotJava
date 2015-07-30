@@ -3,18 +3,18 @@ package org.usfirst.frc.team2635.robot;
 
 public class InputThread<InputType> extends Thread
 {
-	IInput inputStrategy;
+	IInput<InputType> inputStrategy;
 	InputType input;
-	public InputThread(IInput inputStrategy)
+	public InputThread(IInput<InputType> inputStrategy)
 	{
 		this.inputStrategy = inputStrategy;
 	}
 	
-	public IInput getInputStrategy()
+	public IInput<InputType> getInputStrategy()
 	{
 		return inputStrategy;
 	}
-	public void setInputStrategy(IInput inputStrategy)
+	public void setInputStrategy(IInput<InputType> inputStrategy)
 	{
 		this.inputStrategy = inputStrategy;
 	}

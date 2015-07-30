@@ -1,6 +1,6 @@
 package org.usfirst.frc.team2635.robot;
 
-interface IInput 
+interface IInput <InputType>
 {
-	void setInput(Object input);
+	void setInput(InputType input);
 }
