@@ -7,11 +7,11 @@ public class OutputThread<OutputType> extends Thread
 	private IOutput<OutputType> outputStrategy;
 	private OutputType output;
 	
+
 	public OutputThread(IOutput<OutputType> outputStrategy)
 	{
 		this.setOutputStrategy(outputStrategy);
 	}
-	
 
 	public IOutput<OutputType> getOutputStrategy()
 	{
@@ -27,8 +27,13 @@ public class OutputThread<OutputType> extends Thread
 	{
 		return output;
 	}
-
-	
-	
+	@Override
+	public void run()
+	{
+		while(true)
+		{
+			output = outputStrategy.getOutput();
+		}
+	}
 	
 }

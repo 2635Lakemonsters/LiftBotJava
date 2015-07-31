@@ -5,6 +5,7 @@ public class InputThread<InputType> extends Thread
 {
 	IInput<InputType> inputStrategy;
 	InputType input;
+	
 	public InputThread(IInput<InputType> inputStrategy)
 	{
 		this.inputStrategy = inputStrategy;
@@ -22,5 +23,13 @@ public class InputThread<InputType> extends Thread
 	{
 		this.input = input;
 	}
-	
+	@Override
+	public void run()
+	{
+		while(true)
+		{
+			
+			inputStrategy.setInput(input);
+		}
+	}	
 }
