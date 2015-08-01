@@ -18,6 +18,6 @@ public class HDriveInput
 	public double Y;
 	public double X;
 	public double rotation;
-	
+
 	//TODO: add sensors for pid when ready
 }
