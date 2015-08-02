@@ -10,9 +10,10 @@ public class JoystickRawOutput extends Joystick implements IOutput<JoystickData>
 		// TODO Auto-generated constructor stub
 	}
 
+
 	@Override
-	public JoystickData getOutput() {
-		// TODO Auto-generated method stub
+	public JoystickData getOutput(Object parameter)
+	{
 		JoystickData joystickData = new JoystickData();
 		for(int i = 0; i < getButtonCount(); i++)
 		{

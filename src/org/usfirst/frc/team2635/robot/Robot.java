@@ -27,10 +27,12 @@ public class Robot extends IterativeRobot
 	CANTalon frontLeft;
 	CANTalon frontRight;
 	CANTalon middle;
+	
 	DoubleSolenoid depressor = new DoubleSolenoid(0, 1);
 	
 	OutputThread<JoystickData> xboxController;
 	InputThread<HDriveInput> hdrive;
+	
 	public void setDriveControlMode(ControlMode mode)
 	{
 		rearLeft.changeControlMode(ControlMode.Follower);
@@ -75,7 +77,8 @@ public class Robot extends IterativeRobot
     	frontRight = new CANTalon(3);
     	middle = new CANTalon(4);
     	setDriveControlMode(ControlMode.PercentVbus);
-    	xboxController= new OutputThread<JoystickData>(new JoystickRawOutput(0));
+    	
+    	xboxController= new OutputThread<JoystickData>(new JoystickScalable(0));
     	hdrive = new InputThread<HDriveInput>(new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor));
 
     }
@@ -93,12 +96,18 @@ public class Robot extends IterativeRobot
      */
     public void teleopPeriodic() 
     {
-     	HDriveInput joystickInput = new HDriveInput();
+    	xboxController.setParameter(scalingFactor);
+     	HDriveInput hDriveInput = new HDriveInput();
+     	
      	//TODO: set the axis numbers to the correct ones
-        joystickInput.Y = xboxController.getOutput().axes.get(0);
-        joystickInput.X = xboxController.getOutput().axes.get(1);
-        joystickInput.rotation = xboxController.getOutput().axes.get(2);
-        hdrive.setInput(joystickInput);
+        hDriveInput.Y = xboxController.getOutput().axes.get(0);
+        hDriveInput.X = xboxController.getOutput().axes.get(1);
+        hDriveInput.rotation = xboxController.getOutput().axes.get(2);
+        
+        //Update HDrive movement
+        hdrive.setInput(hDriveInput);
+        
+        
         for(int i = 0; i < xboxController.getOutput().axes.size(); i++)
         {
         	SmartDashboard.putNumber("axis " + i, xboxController.getOutput().axes.get(i));

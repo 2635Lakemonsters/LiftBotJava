@@ -2,17 +2,17 @@ package org.usfirst.frc.team2635.robot;
 
 import edu.wpi.first.wpilibj.Joystick;
 
-public class JoystickScaleForSpeed extends Joystick implements IOutput<JoystickData>
+public class JoystickScalable extends Joystick implements IOutput<JoystickData>
 {
 
-	public JoystickScaleForSpeed(int port)
+	public JoystickScalable(int port)
 	{
 		super(port);
 		// TODO Auto-generated constructor stub
 	}
 
 	@Override
-	public JoystickData getOutput()
+	public JoystickData getOutput(Object parameter)
 	{
 		JoystickData joystickData = new JoystickData();
 		for(int i = 0; i < getButtonCount(); i++)
@@ -21,7 +21,7 @@ public class JoystickScaleForSpeed extends Joystick implements IOutput<JoystickD
 		}
 		for(int i = 0; i < getAxisCount(); i++)
 		{
-			joystickData.axes.add(getRawAxis(i) * 100.0);
+			joystickData.axes.add(getRawAxis(i) * (Double)parameter);
 		}
 		return joystickData;
 

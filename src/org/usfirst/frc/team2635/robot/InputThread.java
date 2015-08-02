@@ -1,11 +1,13 @@
 package org.usfirst.frc.team2635.robot;
 
+import java.util.concurrent.locks.Lock;
+
 
 public class InputThread<InputType> extends Thread
 {
 	IInput<InputType> inputStrategy;
 	InputType input;
-	
+	Lock inputLock;
 	public InputThread(IInput<InputType> inputStrategy)
 	{
 		this.inputStrategy = inputStrategy;
@@ -28,8 +30,15 @@ public class InputThread<InputType> extends Thread
 	{
 		while(true)
 		{
-			
-			inputStrategy.setInput(input);
+			inputLock.lock();
+			try
+			{
+				inputStrategy.setInput(input);
+			}
+			finally
+			{
+				inputLock.unlock();
+			}
 		}
 	}	
 }
