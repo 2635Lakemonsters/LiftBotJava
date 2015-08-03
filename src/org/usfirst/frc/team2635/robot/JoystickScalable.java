@@ -15,7 +15,7 @@ public class JoystickScalable extends Joystick implements IOutput<JoystickData>
 	public JoystickData getOutput(Object parameter)
 	{
 		JoystickData joystickData = new JoystickData();
-		for(int i = 0; i < getButtonCount(); i++)
+		for(int i = 1; i < getButtonCount(); i++)
 		{
 			joystickData.buttons.add(getRawButton(i));
 		}

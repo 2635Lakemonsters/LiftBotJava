@@ -9,10 +9,14 @@ public class OutputThread<OutputType> extends Thread
 	private OutputType output;
 	private Object parameter;
 
-	public OutputThread(IOutput<OutputType> outputStrategy, Object parameter)
+	public OutputThread(IOutput<OutputType> outputStrategy, Object parameter, boolean autoStart)
 	{
 		this.outputStrategy = outputStrategy;
 		this.parameter = parameter;
+		if(autoStart)
+		{
+			this.start();
+		}
 	}
 
 	public IOutput<OutputType> getOutputStrategy()

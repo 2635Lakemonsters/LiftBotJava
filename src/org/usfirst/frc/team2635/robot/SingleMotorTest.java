@@ -12,7 +12,7 @@ public class SingleMotorTest implements IInput<Double>
 	@Override
 	public void setInput(Double input)
 	{
-		motor.set(input);
+		motor.set((double)input);
 	}
 
 }

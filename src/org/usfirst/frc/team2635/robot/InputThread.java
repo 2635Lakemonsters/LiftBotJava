@@ -7,9 +7,14 @@ public class InputThread<InputType> extends Thread
 {
 	IInput<InputType> inputStrategy;
 	InputType input;
-	public InputThread(IInput<InputType> inputStrategy)
+	public InputThread(IInput<InputType> inputStrategy, InputType initialInput, boolean autoStart)
 	{
+		this.input = initialInput;
 		this.inputStrategy = inputStrategy;
+		if(autoStart)
+		{
+			this.start();
+		}
 	}
 	
 	public IInput<InputType> getInputStrategy()
