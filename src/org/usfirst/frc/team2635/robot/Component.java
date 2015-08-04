@@ -3,18 +3,15 @@ package org.usfirst.frc.team2635.robot;
 import java.util.concurrent.locks.Lock;
 
 
-public class InputThread<InputType> extends Thread
+public class Component<InputType>
 {
 	IInput<InputType> inputStrategy;
 	InputType input;
-	public InputThread(IInput<InputType> inputStrategy, InputType initialInput, boolean autoStart)
+	public Component(IInput<InputType> inputStrategy, InputType initialInput)
 	{
 		this.input = initialInput;
 		this.inputStrategy = inputStrategy;
-		if(autoStart)
-		{
-			this.start();
-		}
+
 	}
 	
 	public IInput<InputType> getInputStrategy()
@@ -27,18 +24,7 @@ public class InputThread<InputType> extends Thread
 	}
 	public void setInput(InputType input)
 	{
-		this.input = input;
+		inputStrategy.setInput(input);
 	}
-	@Override
-	public void run()
-	{
-		while(true)
-		{
-			synchronized(this)
-			{
-				inputStrategy.setInput(input);
-			}
-			
-		}
-	}	
+
 }

@@ -23,6 +23,7 @@ public class JoystickScalable extends Joystick implements IOutput<JoystickData>
 		{
 			joystickData.axes.add(getRawAxis(i) * (Double)parameter);
 		}
+		joystickData.POVDirection = getPOV();
 		return joystickData;
 
 		

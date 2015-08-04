@@ -8,7 +8,9 @@ public class JoystickData
 	{
 		axes = new ArrayList<Double>();
 		buttons = new ArrayList<Boolean>();
+		POVDirection = -1;
 	}
 	ArrayList<Double> axes;
 	ArrayList<Boolean> buttons;
+	int POVDirection;
 }

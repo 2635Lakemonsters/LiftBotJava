@@ -24,34 +24,73 @@ public class Robot extends IterativeRobot
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
+	final int REARLEFTCHANNEL = 3;
+	final int REARRIGHTCHANNEL= 5;
+	final int FRONTRIGHTCHANNEL = 4;
+	final int FRONTLEFTCHANNEL = 2;
+	final int MIDDLECHANNEL = 6;
+	final int DEPRESSORFORWARD = 4;
+	final int DEPRESSORBACKWARD = 5;
 	
-	CANTalon motor;
-	DigitalInput buttonInput;
-	Servo servo;
-	Relay lightSpike;
+	final int TOTELIFT1CHANNEL = 7;
+	final int TOTELIFT2CHANNEL = 8;
 	
-	OutputThread<JoystickData> xboxController;
-	OutputThread<Boolean> button;
+	final int CANLIFT1CHANNEL = 9;
 	
-	InputThread<Double> singleMotorThread;
-	InputThread<Double> servoThread;
-	InputThread<Boolean> lightSpikeThread;
+	final int YAXIS = 1;
+	final int XAXIS = 4;
+	final int ROTATION = 0;
+	
+	final int VBUSLIFTDOWN = 2;
+	final int VBUSLIFTUP = 3;
+	
+	final int POVUP = 180;
+	final int POVDOWN = 0;
+	
+	final int BUTTONUP = 0;
+	final int BUTTONDOWN = 3;
+	
+	CANTalon rearLeft;
+	CANTalon rearRight;
+	CANTalon frontRight;
+	CANTalon frontLeft;
+	CANTalon middle;
+	DoubleSolenoid depressor;
+	
+	CANTalon liftMotor1;
+	CANTalon liftMotor2;
+	//DigitalInput buttonInput;
+//	Servo servo;
+	//Relay lightSpike;
+	
+	Sensor<JoystickData> xboxController;
+	Component<HDriveInput> hdrive;
+	
+	Lift toteLift;
+	Lift canLift;
+//	InputThread<Double> singleMotorThread;
+//	InputThread<Double> servoThread;
+//	InputThread<Boolean> lightSpikeThread;
 	public void robotInit() 
     {
-		//Note that these need to be initialized before hdrive is initialized, to avoid null pointer pain
+	
 		//TODO: make the channel numbers correct
-
-    	motor = new CANTalon(5);
-    	buttonInput = new DigitalInput(0);
-    	servo = new Servo(0);
-    	lightSpike = new Relay(0);
+    	rearLeft = new CANTalon(REARLEFTCHANNEL);
+    	rearRight = new CANTalon(REARRIGHTCHANNEL);
+    	frontRight = new CANTalon(FRONTRIGHTCHANNEL);
+    	frontLeft = new CANTalon(FRONTLEFTCHANNEL);
+    	middle = new CANTalon(MIDDLECHANNEL);
+    	depressor = new DoubleSolenoid(DEPRESSORFORWARD, DEPRESSORBACKWARD);
     	
-    	button = new OutputThread<Boolean>(new Button(buttonInput), null, true);
-    	xboxController= new OutputThread<JoystickData>(new JoystickScalable(0), 1.0, true);
+    	liftMotor1 = new CANTalon(TOTELIFT1CHANNEL);
+    	liftMotor2 = new CANTalon(TOTELIFT2CHANNEL);
     	
-    	singleMotorThread = new InputThread<Double>(new SingleMotorTest(motor), 0.0, true);
-    	servoThread = new InputThread<Double>(new SimpleServo(servo), 0.0, true);
-    	lightSpikeThread = new InputThread<Boolean>(new SimpleSpike(lightSpike), false, true);
+    	//ROBOT PARTS:
+    	toteLift = new Lift(liftMotor1, liftMotor2, new VBusLift());
+    	canLift = new Lift(liftMotor1, null, new VBusLift());
+    	
+    	xboxController= new Sensor<JoystickData>(new JoystickScalable(0));
+    	hdrive = new Component<HDriveInput>(new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor), new HDriveInput(0,0,0));
     	
     }
 
@@ -68,30 +107,62 @@ public class Robot extends IterativeRobot
      */
     public void teleopPeriodic() 
     {
-        
+        HDriveInput input = new HDriveInput();
         //Update HDrive movement
-        singleMotorThread.setInput(xboxController.getOutput().axes.get(1));
+//        singleMotorThread.setInput(xboxController.getOutput().axes.get(1));
+        JoystickData joystickOut = xboxController.getOutput(1.0);
+        input.X=joystickOut.axes.get(XAXIS);
+        input.Y=joystickOut.axes.get(YAXIS);
+        input.rotation = joystickOut.axes.get(ROTATION);
+        hdrive.setInput(input);
         
-        
-        for(int i = 0; i < xboxController.getOutput().axes.size(); i++)
+        if(joystickOut.POVDirection == POVDOWN)
         {
-        	SmartDashboard.putNumber("axis " + i, xboxController.getOutput().axes.get(i));
+        	toteLift.setSetPoint(-0.5);
         }
-        for(int i = 0; i < xboxController.getOutput().buttons.size(); i++)
+        else if(joystickOut.POVDirection == POVUP)
         {
-        	SmartDashboard.putBoolean("button " + i, xboxController.getOutput().buttons.get(i));
-        }
-        SmartDashboard.putBoolean("DIO Button 1:", button.getOutput());
-        if(!button.getOutput())
-        {
-        	servoThread.setInput(1.0);
-        
+        	toteLift.setSetPoint(0.5);
         }
         else
         {
-        	servoThread.setInput(-1.0);
+        	toteLift.setSetPoint(0.0);
         }
-        lightSpikeThread.setInput(!button.getOutput());
+        
+        if(joystickOut.buttons.get(BUTTONDOWN))
+        {
+        	canLift.setSetPoint(-0.5);
+        }
+        else if (joystickOut.buttons.get(BUTTONUP))
+        {
+        	canLift.setSetPoint(0.5);
+        }
+        else
+        {
+        	canLift.setSetPoint(0.0);
+        }
+        
+        for(int i = 0; i < joystickOut.axes.size(); i++)
+        {
+        	SmartDashboard.putNumber("axis " + i, joystickOut.axes.get(i));
+        }
+        for(int i = 0; i < xboxController.getOutput(1.0).buttons.size(); i++)
+        {
+        	SmartDashboard.putBoolean("button " + i, joystickOut.buttons.get(i));
+        }
+        SmartDashboard.putNumber("POV", (double)joystickOut.POVDirection);
+//        SmartDashboard.putBoolean("DIO Button 1:", button.getOutput());
+//        if(!button.getOutput())
+//        {
+//        	servoThread.setInput(1.0);wwwwwwwwwwwwwwwwwwwwwww
+//        }
+        
+//        else
+//        {
+//        	servoThread.setInput(-1.0);
+//        }
+//        System.out.println("2 hit");
+//        lightSpikeThread.setInput(!button.getOutput());
     }
     
     /**
