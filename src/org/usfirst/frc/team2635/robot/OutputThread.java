@@ -1,6 +1,5 @@
 package org.usfirst.frc.team2635.robot;
 
-import java.util.concurrent.locks.Lock;
 
 
 
@@ -9,11 +8,11 @@ public class OutputThread<OutputType> extends Thread
 	private IOutput<OutputType> outputStrategy;
 	private OutputType output;
 	private Object parameter;
-	private Lock outputLock;
 
-	public OutputThread(IOutput<OutputType> outputStrategy)
+	public OutputThread(IOutput<OutputType> outputStrategy, Object parameter)
 	{
-		this.setOutputStrategy(outputStrategy);
+		this.outputStrategy = outputStrategy;
+		this.parameter = parameter;
 	}
 
 	public IOutput<OutputType> getOutputStrategy()
@@ -48,15 +47,11 @@ public class OutputThread<OutputType> extends Thread
 		while(true)
 		{
 			//This will prevent the outside from grabbing output before output computation is finished
-			outputLock.lock();
-			try
+			synchronized(this)
 			{
 				output = outputStrategy.getOutput(parameter);
 			}
-			finally
-			{
-				outputLock.unlock();
-			}
+		
 			
 		}
 	}

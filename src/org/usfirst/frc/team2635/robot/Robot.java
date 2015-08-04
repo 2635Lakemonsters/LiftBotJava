@@ -21,66 +21,21 @@ public class Robot extends IterativeRobot
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
-	double scalingFactor = 1.0;
-	CANTalon rearLeft;
-	CANTalon rearRight;
-	CANTalon frontLeft;
-	CANTalon frontRight;
-	CANTalon middle;
 	
-	DoubleSolenoid depressor = new DoubleSolenoid(0, 1);
-	
+	CANTalon motor;
 	OutputThread<JoystickData> xboxController;
-	InputThread<HDriveInput> hdrive;
+	InputThread<Double> singleMotor;
 	
-	public void setDriveControlMode(ControlMode mode)
-	{
-		rearLeft.changeControlMode(ControlMode.Follower);
-		rearRight.changeControlMode(ControlMode.Follower);
-		frontLeft.changeControlMode(mode);
-		frontRight.changeControlMode(mode);
-		switch(mode)
-		{
-		case Current:
-			scalingFactor = 0;
-			break;
-		case Disabled:
-			scalingFactor = 0;
-			break;
-		case Follower:
-			scalingFactor = 0;
-			break;
-		case PercentVbus:
-			scalingFactor = 1.0;
-			break;
-		case Position:
-			scalingFactor = 10;
-			break;
-		case Speed:
-			scalingFactor = 100;
-			break;
-		case Voltage:
-			scalingFactor = 1.0;
-			break;
-		default:
-			scalingFactor = 0;
-		}
-	}
 	public void robotInit() 
     {
 		//Note that these need to be initialized before hdrive is initialized, to avoid null pointer pain
 		//TODO: make the channel numbers correct
 
-    	rearLeft = new CANTalon(0);
-    	rearRight = new CANTalon(1);
-    	frontLeft = new CANTalon(2);
-    	frontRight = new CANTalon(3);
-    	middle = new CANTalon(4);
-    	setDriveControlMode(ControlMode.PercentVbus);
-    	
-    	xboxController= new OutputThread<JoystickData>(new JoystickScalable(0));
-    	hdrive = new InputThread<HDriveInput>(new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor));
-
+    	motor = new CANTalon(5);
+    	xboxController= new OutputThread<JoystickData>(new JoystickScalable(0), 1.0);
+    	singleMotor = new InputThread<Double>(new SingleMotorTest(motor));
+    	xboxController.start();
+    	singleMotor.start();
     }
 
     /**
@@ -96,16 +51,9 @@ public class Robot extends IterativeRobot
      */
     public void teleopPeriodic() 
     {
-    	xboxController.setParameter(scalingFactor);
-     	HDriveInput hDriveInput = new HDriveInput();
-     	
-     	//TODO: set the axis numbers to the correct ones
-        hDriveInput.Y = xboxController.getOutput().axes.get(0);
-        hDriveInput.X = xboxController.getOutput().axes.get(1);
-        hDriveInput.rotation = xboxController.getOutput().axes.get(2);
         
         //Update HDrive movement
-        hdrive.setInput(hDriveInput);
+        singleMotor.setInput(xboxController.getOutput().axes.get(1));
         
         
         for(int i = 0; i < xboxController.getOutput().axes.size(); i++)

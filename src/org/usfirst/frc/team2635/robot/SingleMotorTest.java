@@ -7,13 +7,11 @@ public class SingleMotorTest implements IInput<Double>
 	SpeedController motor;
 	public SingleMotorTest(SpeedController motor)
 	{
-		super();
 		this.motor = motor;
 	}
 	@Override
 	public void setInput(Double input)
 	{
-		// TODO Auto-generated method stub
 		motor.set(input);
 	}
 

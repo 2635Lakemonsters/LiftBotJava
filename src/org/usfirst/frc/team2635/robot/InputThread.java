@@ -7,7 +7,6 @@ public class InputThread<InputType> extends Thread
 {
 	IInput<InputType> inputStrategy;
 	InputType input;
-	Lock inputLock;
 	public InputThread(IInput<InputType> inputStrategy)
 	{
 		this.inputStrategy = inputStrategy;
@@ -30,15 +29,11 @@ public class InputThread<InputType> extends Thread
 	{
 		while(true)
 		{
-			inputLock.lock();
-			try
+			synchronized(this)
 			{
 				inputStrategy.setInput(input);
 			}
-			finally
-			{
-				inputLock.unlock();
-			}
+			
 		}
 	}	
 }
