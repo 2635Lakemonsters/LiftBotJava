@@ -5,7 +5,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.SpeedController;
 
-public class HDrivePneumatic extends RobotDrive implements IInput<HDriveInput>
+public class HDrivePneumatic extends RobotDrive
 {
 	SpeedController middleWheel;
 	DoubleSolenoid depressor;
@@ -17,20 +17,19 @@ public class HDrivePneumatic extends RobotDrive implements IInput<HDriveInput>
 		this.middleWheel = middle;
 		this.depressor = depressor;
 	}
-	@Override
-	public void setInput(HDriveInput input)
+	public void drive(double X, double Y, double rotation)
 	{
-		if(input.X > MIDDLE_WHEEL_JOYSTICK_TOLERANCE || input.X < -MIDDLE_WHEEL_JOYSTICK_TOLERANCE)
+		if(X > MIDDLE_WHEEL_JOYSTICK_TOLERANCE || X < -MIDDLE_WHEEL_JOYSTICK_TOLERANCE)
 		{
 			depressor.set(Value.kForward);
-			middleWheel.set(input.X);
+			middleWheel.set(X);
 			arcadeDrive(0, 0);
 		}
 		else
 		{
 			depressor.set(Value.kReverse);
 			middleWheel.set(0);
-			arcadeDrive(input.Y, input.rotation);
+			arcadeDrive(Y, rotation);
 		}
 	}
 	

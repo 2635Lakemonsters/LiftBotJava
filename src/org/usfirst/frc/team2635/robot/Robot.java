@@ -24,18 +24,23 @@ public class Robot extends IterativeRobot
      * This function is run when the robot is first started up and should be
      * used for any initialization code.
      */
-	final int REARLEFTCHANNEL = 3;
-	final int REARRIGHTCHANNEL= 5;
-	final int FRONTRIGHTCHANNEL = 4;
-	final int FRONTLEFTCHANNEL = 2;
+	//region CONSTANTS
+	final int REARLEFTCHANNEL = 2;
+	final int REARRIGHTCHANNEL= 3;
+	final int FRONTRIGHTCHANNEL = 5;
+	final int FRONTLEFTCHANNEL = 4;
 	final int MIDDLECHANNEL = 6;
 	final int DEPRESSORFORWARD = 4;
 	final int DEPRESSORBACKWARD = 5;
 	
-	final int TOTELIFT1CHANNEL = 7;
-	final int TOTELIFT2CHANNEL = 8;
+	final int TOTELIFT1CHANNEL = 8;
+	final int TOTELIFT2CHANNEL = 9;
 	
-	final int CANLIFT1CHANNEL = 9;
+	final double TOTELIFTINCREMENT = 100.0;
+	
+	final int CANLIFT1CHANNEL = 7;
+	
+	final double CANLIFTINCREMENT = 100.0;
 	
 	final int YAXIS = 1;
 	final int XAXIS = 4;
@@ -44,11 +49,12 @@ public class Robot extends IterativeRobot
 	final int VBUSLIFTDOWN = 2;
 	final int VBUSLIFTUP = 3;
 	
-	final int POVUP = 180;
-	final int POVDOWN = 0;
+	final int POVUP = 0;
+	final int POVDOWN = 180;
 	
-	final int BUTTONUP = 0;
-	final int BUTTONDOWN = 3;
+	final int BUTTONUP = 3;
+	final int BUTTONDOWN = 0;
+	//endregion
 	
 	CANTalon rearLeft;
 	CANTalon rearRight;
@@ -57,24 +63,25 @@ public class Robot extends IterativeRobot
 	CANTalon middle;
 	DoubleSolenoid depressor;
 	
-	CANTalon liftMotor1;
-	CANTalon liftMotor2;
+	CANTalon toteLiftMotor1;
+	CANTalon toteLiftMotor2;
+	
+	CANTalon canLiftMotor1;
 	//DigitalInput buttonInput;
 //	Servo servo;
 	//Relay lightSpike;
 	
 	Sensor<JoystickData> xboxController;
-	Component<HDriveInput> hdrive;
+	HDrivePneumatic hdrive;
 	
-	Lift toteLift;
-	Lift canLift;
+	LiftPositionTwoMotor toteLift;
+	LiftPositionSingleMotor canLift;
 //	InputThread<Double> singleMotorThread;
 //	InputThread<Double> servoThread;
 //	InputThread<Boolean> lightSpikeThread;
 	public void robotInit() 
     {
 	
-		//TODO: make the channel numbers correct
     	rearLeft = new CANTalon(REARLEFTCHANNEL);
     	rearRight = new CANTalon(REARRIGHTCHANNEL);
     	frontRight = new CANTalon(FRONTRIGHTCHANNEL);
@@ -82,16 +89,21 @@ public class Robot extends IterativeRobot
     	middle = new CANTalon(MIDDLECHANNEL);
     	depressor = new DoubleSolenoid(DEPRESSORFORWARD, DEPRESSORBACKWARD);
     	
-    	liftMotor1 = new CANTalon(TOTELIFT1CHANNEL);
-    	liftMotor2 = new CANTalon(TOTELIFT2CHANNEL);
+    	toteLiftMotor1 = new CANTalon(TOTELIFT1CHANNEL);
+    	//Zero out encoder
+    	toteLiftMotor1.setPosition(0);
+    	toteLiftMotor2 = new CANTalon(TOTELIFT2CHANNEL);
+    	toteLiftMotor1.reverseSensor(true);
     	
-    	//ROBOT PARTS:
-    	toteLift = new Lift(liftMotor1, liftMotor2, new VBusLift());
-    	canLift = new Lift(liftMotor1, null, new VBusLift());
+    	canLiftMotor1 = new CANTalon(CANLIFT1CHANNEL);
+    	//Zero out encoder
+    	canLiftMotor1.setPosition(0);
+    	
+    	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, false, 1.0, 0, 0, 7400.0, 0.0);
+    	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
     	xboxController= new Sensor<JoystickData>(new JoystickScalable(0));
-    	hdrive = new Component<HDriveInput>(new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor), new HDriveInput(0,0,0));
-    	
+    	hdrive = new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor);
     }
 
     /**
@@ -107,41 +119,35 @@ public class Robot extends IterativeRobot
      */
     public void teleopPeriodic() 
     {
-        HDriveInput input = new HDriveInput();
-        //Update HDrive movement
-//        singleMotorThread.setInput(xboxController.getOutput().axes.get(1));
         JoystickData joystickOut = xboxController.getOutput(1.0);
-        input.X=joystickOut.axes.get(XAXIS);
-        input.Y=joystickOut.axes.get(YAXIS);
-        input.rotation = joystickOut.axes.get(ROTATION);
-        hdrive.setInput(input);
+       
+        hdrive.drive(joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
         
         if(joystickOut.POVDirection == POVDOWN)
         {
-        	toteLift.setSetPoint(-0.5);
+        	toteLift.setSetPoint(toteLift.getSetPoint() - TOTELIFTINCREMENT);
         }
         else if(joystickOut.POVDirection == POVUP)
         {
-        	toteLift.setSetPoint(0.5);
+        	toteLift.setSetPoint(toteLift.getSetPoint() + TOTELIFTINCREMENT);
         }
-        else
-        {
-        	toteLift.setSetPoint(0.0);
-        }
+       
         
         if(joystickOut.buttons.get(BUTTONDOWN))
         {
-        	canLift.setSetPoint(-0.5);
+        	canLift.setSetPoint(canLift.getSetPoint() - CANLIFTINCREMENT);
         }
         else if (joystickOut.buttons.get(BUTTONUP))
         {
-        	canLift.setSetPoint(0.5);
+        	canLift.setSetPoint(canLift.getSetPoint() + CANLIFTINCREMENT);
         }
-        else
-        {
-        	canLift.setSetPoint(0.0);
-        }
+        toteLift.setUpperLimit(canLift.getSetPoint());
+        canLift.setLowerLimit(toteLift.getSetPoint());
+        SmartDashboard.putNumber("CanLiftSetPoint:", canLift.getSetPoint());
+        SmartDashboard.putNumber("ToteLiftSetPoint", toteLift.getSetPoint());
         
+        SmartDashboard.putNumber("CanEncoder", canLiftMotor1.getEncPosition());
+        SmartDashboard.putNumber("ToteEncoder", toteLiftMotor1.getEncPosition());
         for(int i = 0; i < joystickOut.axes.size(); i++)
         {
         	SmartDashboard.putNumber("axis " + i, joystickOut.axes.get(i));
