@@ -4,8 +4,10 @@ package org.usfirst.frc.team2635.robot;
 import edu.wpi.first.wpilibj.CANTalon.ControlMode;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
+import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Relay;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -56,6 +58,7 @@ public class Robot extends IterativeRobot
 	final int BUTTONDOWN = 0;
 	//endregion
 	
+	//Drive System declarations
 	CANTalon rearLeft;
 	CANTalon rearRight;
 	CANTalon frontRight;
@@ -63,10 +66,15 @@ public class Robot extends IterativeRobot
 	CANTalon middle;
 	DoubleSolenoid depressor;
 	
+	//Tote Carriage declarations
 	CANTalon toteLiftMotor1;
 	CANTalon toteLiftMotor2;
+	DoubleSolenoid toteGrabberSolenoid;
 	
+	//Can Carriage declarations
 	CANTalon canLiftMotor1;
+	DoubleSolenoid canGrabberSolenoid;
+	
 	//DigitalInput buttonInput;
 //	Servo servo;
 	//Relay lightSpike;
@@ -74,6 +82,7 @@ public class Robot extends IterativeRobot
 	Sensor<JoystickData> xboxController;
 	HDrivePneumatic hdrive;
 	
+	Joystick understandableJoystick;
 	LiftPositionTwoMotor toteLift;
 	LiftPositionSingleMotor canLift;
 //	InputThread<Double> singleMotorThread;
@@ -94,16 +103,19 @@ public class Robot extends IterativeRobot
     	toteLiftMotor1.setPosition(0);
     	toteLiftMotor2 = new CANTalon(TOTELIFT2CHANNEL);
     	toteLiftMotor1.reverseSensor(true);
+    	toteGrabberSolenoid = new DoubleSolenoid(2, 3);
     	
     	canLiftMotor1 = new CANTalon(CANLIFT1CHANNEL);
     	//Zero out encoder
     	canLiftMotor1.setPosition(0);
+    	canGrabberSolenoid = new DoubleSolenoid(4, 5);
     	
     	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, false, 1.0, 0, 0, 7400.0, 0.0);
     	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
     	xboxController= new Sensor<JoystickData>(new JoystickScalable(0));
     	hdrive = new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor);
+    	understandableJoystick = new Joystick(1);
     }
 
     /**
@@ -169,6 +181,23 @@ public class Robot extends IterativeRobot
 //        }
 //        System.out.println("2 hit");
 //        lightSpikeThread.setInput(!button.getOutput());
+        if(understandableJoystick.getRawButton())
+        {
+        	toteGrabberSolenoid.set(Value.kForward);
+        }
+        else if (understandableJoystick.getRawButton())
+        {
+        	toteGrabberSolenoid.set(Value.kReverse);
+        }
+        
+        if(understandableJoystick.getRawButton())
+        {
+        	canGrabberSolenoid.set(Value.kForward);
+        }
+        else if (understandableJoystick.getRawButton())
+        {
+        	canGrabberSolenoid.set(Value.kReverse);
+        }
     }
     
     /**
