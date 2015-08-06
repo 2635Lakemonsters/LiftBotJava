@@ -53,9 +53,19 @@ public class Robot extends IterativeRobot
 	
 	final int POVUP = 0;
 	final int POVDOWN = 180;
+	final int POVLEFT = 270;
+	final int POVRIGHT = 90;
 	
 	final int BUTTONUP = 3;
 	final int BUTTONDOWN = 0;
+	
+	final int toteSolenoidForward = 0;
+	final int toteSolenoidReverse = 1;
+	final int canSolenoidForward = 2;
+	final int canSolenoidReverse = 3;
+	
+	final int canGrabOpen = 1;
+	final int canGrabClose = 2;
 	//endregion
 	
 	//Drive System declarations
@@ -69,11 +79,11 @@ public class Robot extends IterativeRobot
 	//Tote Carriage declarations
 	CANTalon toteLiftMotor1;
 	CANTalon toteLiftMotor2;
-	DoubleSolenoid toteGrabberSolenoid;
+	DoubleSolenoid toteArmsSolenoid;
 	
 	//Can Carriage declarations
 	CANTalon canLiftMotor1;
-	DoubleSolenoid canGrabberSolenoid;
+	DoubleSolenoid canArmsSolenoid;
 	
 	//DigitalInput buttonInput;
 //	Servo servo;
@@ -82,7 +92,8 @@ public class Robot extends IterativeRobot
 	Sensor<JoystickData> xboxController;
 	HDrivePneumatic hdrive;
 	
-	Joystick understandableJoystick;
+	Arms toteArms;
+	Arms canArms;
 	LiftPositionTwoMotor toteLift;
 	LiftPositionSingleMotor canLift;
 //	InputThread<Double> singleMotorThread;
@@ -103,19 +114,20 @@ public class Robot extends IterativeRobot
     	toteLiftMotor1.setPosition(0);
     	toteLiftMotor2 = new CANTalon(TOTELIFT2CHANNEL);
     	toteLiftMotor1.reverseSensor(true);
-    	toteGrabberSolenoid = new DoubleSolenoid(2, 3);
+    	toteArmsSolenoid = new DoubleSolenoid(toteSolenoidForward, toteSolenoidReverse);
     	
     	canLiftMotor1 = new CANTalon(CANLIFT1CHANNEL);
     	//Zero out encoder
     	canLiftMotor1.setPosition(0);
-    	canGrabberSolenoid = new DoubleSolenoid(4, 5);
+    	canArmsSolenoid = new DoubleSolenoid(canSolenoidForward, canSolenoidReverse);
     	
     	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, false, 1.0, 0, 0, 7400.0, 0.0);
     	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
     	xboxController= new Sensor<JoystickData>(new JoystickScalable(0));
     	hdrive = new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor);
-    	understandableJoystick = new Joystick(1);
+    	toteArms = new Arms(toteArmsSolenoid);
+    	canArms = new Arms(canArmsSolenoid);
     }
 
     /**
@@ -153,6 +165,7 @@ public class Robot extends IterativeRobot
         {
         	canLift.setSetPoint(canLift.getSetPoint() + CANLIFTINCREMENT);
         }
+        
         toteLift.setUpperLimit(canLift.getSetPoint());
         canLift.setLowerLimit(toteLift.getSetPoint());
         SmartDashboard.putNumber("CanLiftSetPoint:", canLift.getSetPoint());
@@ -181,22 +194,23 @@ public class Robot extends IterativeRobot
 //        }
 //        System.out.println("2 hit");
 //        lightSpikeThread.setInput(!button.getOutput());
-        if(understandableJoystick.getRawButton())
+        
+        if(joystickOut.POVDirection == POVRIGHT)
         {
-        	toteGrabberSolenoid.set(Value.kForward);
+        	toteArms.set(Value.kForward);
         }
-        else if (understandableJoystick.getRawButton())
+        else if(joystickOut.POVDirection == POVLEFT)
         {
-        	toteGrabberSolenoid.set(Value.kReverse);
+        	toteArms.set(Value.kReverse);
         }
         
-        if(understandableJoystick.getRawButton())
+        if(joystickOut.buttons.get(canGrabOpen))
         {
-        	canGrabberSolenoid.set(Value.kForward);
+        	canArms.set(Value.kForward);
         }
-        else if (understandableJoystick.getRawButton())
+        else if (joystickOut.buttons.get(canGrabClose))
         {
-        	canGrabberSolenoid.set(Value.kReverse);
+        	canArms.set(Value.kReverse);
         }
     }
     
