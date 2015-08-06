@@ -1,4 +1,4 @@
-package org.usfirst.frc.team2635.robot;
+package lift;
 
 public class LiftInput
 {

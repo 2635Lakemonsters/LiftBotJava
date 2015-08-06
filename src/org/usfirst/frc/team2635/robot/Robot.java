@@ -1,6 +1,13 @@
 
 package org.usfirst.frc.team2635.robot;
 
+import hdrive.HDrivePneumatic;
+import lift.Arms;
+import lift.LiftPositionSingleMotor;
+import lift.LiftPositionTwoMotor;
+
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.wpilibj.CANTalon.ControlMode;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
@@ -9,6 +16,8 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Joystick;
 import edu.wpi.first.wpilibj.Relay;
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SerialPort;
 import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -75,6 +84,7 @@ public class Robot extends IterativeRobot
 	CANTalon frontLeft;
 	CANTalon middle;
 	DoubleSolenoid depressor;
+	AHRS navx;
 	
 	//Tote Carriage declarations
 	CANTalon toteLiftMotor1;
@@ -89,7 +99,7 @@ public class Robot extends IterativeRobot
 //	Servo servo;
 	//Relay lightSpike;
 	
-	Sensor<JoystickData> xboxController;
+	ScaledJoystick xboxController;
 	HDrivePneumatic hdrive;
 	
 	Arms toteArms;
@@ -101,7 +111,8 @@ public class Robot extends IterativeRobot
 //	InputThread<Boolean> lightSpikeThread;
 	public void robotInit() 
     {
-	
+        navx = new AHRS(SerialPort.Port.kMXP); 
+
     	rearLeft = new CANTalon(REARLEFTCHANNEL);
     	rearRight = new CANTalon(REARRIGHTCHANNEL);
     	frontRight = new CANTalon(FRONTRIGHTCHANNEL);
@@ -124,7 +135,7 @@ public class Robot extends IterativeRobot
     	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, false, 1.0, 0, 0, 7400.0, 0.0);
     	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
-    	xboxController= new Sensor<JoystickData>(new JoystickScalable(0));
+    	xboxController= new ScaledJoystick(0);
     	hdrive = new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor);
     	toteArms = new Arms(toteArmsSolenoid);
     	canArms = new Arms(canArmsSolenoid);
@@ -141,76 +152,69 @@ public class Robot extends IterativeRobot
     /**
      * This function is called periodically during operator control
      */
+    
     public void teleopPeriodic() 
     {
+    	
         JoystickData joystickOut = xboxController.getOutput(1.0);
-       
-        hdrive.drive(joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
         
-        if(joystickOut.POVDirection == POVDOWN)
+        if(joystickOut.connected)
         {
-        	toteLift.setSetPoint(toteLift.getSetPoint() - TOTELIFTINCREMENT);
-        }
-        else if(joystickOut.POVDirection == POVUP)
-        {
-        	toteLift.setSetPoint(toteLift.getSetPoint() + TOTELIFTINCREMENT);
-        }
-       
-        
-        if(joystickOut.buttons.get(BUTTONDOWN))
-        {
-        	canLift.setSetPoint(canLift.getSetPoint() - CANLIFTINCREMENT);
-        }
-        else if (joystickOut.buttons.get(BUTTONUP))
-        {
-        	canLift.setSetPoint(canLift.getSetPoint() + CANLIFTINCREMENT);
-        }
-        
-        toteLift.setUpperLimit(canLift.getSetPoint());
-        canLift.setLowerLimit(toteLift.getSetPoint());
-        SmartDashboard.putNumber("CanLiftSetPoint:", canLift.getSetPoint());
-        SmartDashboard.putNumber("ToteLiftSetPoint", toteLift.getSetPoint());
-        
-        SmartDashboard.putNumber("CanEncoder", canLiftMotor1.getEncPosition());
-        SmartDashboard.putNumber("ToteEncoder", toteLiftMotor1.getEncPosition());
-        for(int i = 0; i < joystickOut.axes.size(); i++)
-        {
-        	SmartDashboard.putNumber("axis " + i, joystickOut.axes.get(i));
-        }
-        for(int i = 0; i < xboxController.getOutput(1.0).buttons.size(); i++)
-        {
-        	SmartDashboard.putBoolean("button " + i, joystickOut.buttons.get(i));
-        }
-        SmartDashboard.putNumber("POV", (double)joystickOut.POVDirection);
-//        SmartDashboard.putBoolean("DIO Button 1:", button.getOutput());
-//        if(!button.getOutput())
-//        {
-//        	servoThread.setInput(1.0);wwwwwwwwwwwwwwwwwwwwwww
-//        }
-        
-//        else
-//        {
-//        	servoThread.setInput(-1.0);
-//        }
-//        System.out.println("2 hit");
-//        lightSpikeThread.setInput(!button.getOutput());
-        
-        if(joystickOut.POVDirection == POVRIGHT)
-        {
-        	toteArms.set(Value.kForward);
-        }
-        else if(joystickOut.POVDirection == POVLEFT)
-        {
-        	toteArms.set(Value.kReverse);
-        }
-        
-        if(joystickOut.buttons.get(canGrabOpen))
-        {
-        	canArms.set(Value.kForward);
-        }
-        else if (joystickOut.buttons.get(canGrabClose))
-        {
-        	canArms.set(Value.kReverse);
+	        hdrive.drive(-joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
+	        
+	        if(joystickOut.POVDirection == POVDOWN)
+	        {
+	        	toteLift.setSetPoint(toteLift.getSetPoint() - TOTELIFTINCREMENT);
+	        }
+	        else if(joystickOut.POVDirection == POVUP)
+	        {
+	        	toteLift.setSetPoint(toteLift.getSetPoint() + TOTELIFTINCREMENT);
+	        }
+	       
+	        if(joystickOut.buttons.get(BUTTONDOWN))
+	        {
+	        	canLift.setSetPoint(canLift.getSetPoint() - CANLIFTINCREMENT);
+	        }
+	        else if (joystickOut.buttons.get(BUTTONUP))
+	        {
+	        	canLift.setSetPoint(canLift.getSetPoint() + CANLIFTINCREMENT);
+	        }
+	        
+	        toteLift.setUpperLimit(canLift.getSetPoint());
+	        canLift.setLowerLimit(toteLift.getSetPoint());
+	                
+	        if(joystickOut.POVDirection == POVRIGHT)
+	        {
+	        	toteArms.set(Value.kForward);
+	        }
+	        else if(joystickOut.POVDirection == POVLEFT)
+	        {
+	        	toteArms.set(Value.kReverse);
+	        }
+	        
+	        if(joystickOut.buttons.get(canGrabOpen))
+	        {
+	        	canArms.set(Value.kForward);
+	        }
+	        else if (joystickOut.buttons.get(canGrabClose))
+	        {
+	        	canArms.set(Value.kReverse);
+	        }
+	        SmartDashboard.putNumber("CanLiftSetPoint:", canLift.getSetPoint());
+	        SmartDashboard.putNumber("ToteLiftSetPoint", toteLift.getSetPoint());
+	        
+	        SmartDashboard.putNumber("CanEncoder", canLiftMotor1.getEncPosition());
+	        SmartDashboard.putNumber("ToteEncoder", toteLiftMotor1.getEncPosition());
+	        for(int i = 0; i < joystickOut.axes.size(); i++)
+	        {
+	        	SmartDashboard.putNumber("axis " + i, joystickOut.axes.get(i));
+	        }
+	        for(int i = 0; i < xboxController.getOutput(1.0).buttons.size(); i++)
+	        {
+	        	SmartDashboard.putBoolean("button " + i, joystickOut.buttons.get(i));
+	        }
+	        SmartDashboard.putNumber("POV", (double)joystickOut.POVDirection);
+	        
         }
     }
     

@@ -1,4 +1,4 @@
-package org.usfirst.frc.team2635.robot;
+package lift;
 
 
 import edu.wpi.first.wpilibj.CANTalon;
@@ -9,6 +9,15 @@ public class LiftPositionSingleMotor extends Lift
 	CANTalon CANLift1;
 	double upperLimit;
 	double lowerLimit;
+	boolean overrideLimits = false;
+	public boolean isOverrideLimits()
+	{
+		return overrideLimits;
+	}
+	public void setOverrideLimits(boolean overrideLimits)
+	{
+		this.overrideLimits = overrideLimits;
+	}
 	public LiftPositionSingleMotor(CANTalon lift1, boolean reverse, double initialP, double initialI, double initialD, double upperLimit, double lowerLimit)
 	{
 		super(lift1, reverse);
@@ -58,7 +67,14 @@ public class LiftPositionSingleMotor extends Lift
 	@Override
 	public void setSetPoint(Double setPoint) 
 	{
-		this.setPoint = restrain(setPoint, this.upperLimit, this.lowerLimit);
+		if(overrideLimits)
+		{
+			this.setPoint=setPoint;
+		}
+		else
+		{
+			this.setPoint = restrain(setPoint, this.upperLimit, this.lowerLimit);
+		}
 		setElevation(this.setPoint);
 	}
 	@Override

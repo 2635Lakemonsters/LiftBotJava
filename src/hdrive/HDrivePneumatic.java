@@ -1,4 +1,4 @@
-package org.usfirst.frc.team2635.robot;
+package hdrive;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -7,15 +7,18 @@ import edu.wpi.first.wpilibj.SpeedController;
 
 public class HDrivePneumatic extends RobotDrive
 {
+	IActuator middleWheelStrategy;
 	SpeedController middleWheel;
 	DoubleSolenoid depressor;
 	final double MIDDLE_WHEEL_JOYSTICK_TOLERANCE = 0.1;
 	public HDrivePneumatic(SpeedController frontLeft, SpeedController frontRight,
-			SpeedController rearLeft, SpeedController rearRight, SpeedController middle, DoubleSolenoid depressor)
+			SpeedController rearLeft, SpeedController rearRight, SpeedController middleWheel, IActuator middleWheelStrategy,
+			DoubleSolenoid depressor)
 	{
 		super(frontLeft, frontRight, rearLeft, rearRight);
-		this.middleWheel = middle;
+		this.middleWheel = middleWheel;
 		this.depressor = depressor;
+		this.middleWheelStrategy = middleWheelStrategy;
 	}
 	public void drive(double X, double Y, double rotation)
 	{
