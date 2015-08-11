@@ -1,7 +1,7 @@
 package org.usfirst.frc.team2635.robot;
 
 
-
+@Deprecated 
 public class Component<InputType>
 {
 	IInput<InputType> inputStrategy;

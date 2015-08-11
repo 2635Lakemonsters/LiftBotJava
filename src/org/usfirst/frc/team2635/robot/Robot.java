@@ -5,6 +5,7 @@ import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
@@ -33,11 +34,11 @@ public class Robot extends IterativeRobot
 	final int TOTELIFT1CHANNEL = 8;
 	final int TOTELIFT2CHANNEL = 9;
 	
-	final double TOTELIFTINCREMENT = 100.0;
+	final double TOTELIFTINCREMENT = 2000.0;
 	
 	final int CANLIFT1CHANNEL = 7;
 	
-	final double CANLIFTINCREMENT = 100.0;
+	final double CANLIFTINCREMENT = 2000.0;
 	
 	final int YAXIS = 1;
 	final int XAXIS = 4;
@@ -84,7 +85,7 @@ public class Robot extends IterativeRobot
 //	Servo servo;
 	//Relay lightSpike;
 	
-	ScaledJoystick xboxController;
+	ScaledJoystickOneShot xboxController;
 	HDrivePneumatic hdrive;
 	
 	Arms toteArms;
@@ -119,8 +120,8 @@ public class Robot extends IterativeRobot
     	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, false, 1.0, 0, 0, 7400.0, 0.0);
     	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
-    	xboxController= new ScaledJoystick(0);
-    	hdrive = new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, new MiddleWheelVbus(), depressor);
+    	xboxController= new ScaledJoystickOneShot(0, new int[]{1, 3});
+    	hdrive = new HDrivePneumatic(new RobotDrive(frontLeft, frontRight, rearLeft, rearRight), new StandardArcadeDrive(), middle, new MiddleWheelVbus(), depressor);
     	toteArms = new Arms(toteArmsSolenoid);
     	canArms = new Arms(canArmsSolenoid);
     }
@@ -144,7 +145,7 @@ public class Robot extends IterativeRobot
         
         if(joystickOut.connected)
         {
-	        hdrive.drive(-joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
+	        hdrive.drive(joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
 	        
 	        if(joystickOut.POVDirection == POVDOWN)
 	        {
@@ -163,9 +164,9 @@ public class Robot extends IterativeRobot
 	        {
 	        	canLift.setSetPoint(canLift.getSetPoint() + CANLIFTINCREMENT);
 	        }
-	        
-	        toteLift.setUpperLimit(canLift.getSetPoint());
-	        canLift.setLowerLimit(toteLift.getSetPoint());
+	        //Offset for gearing differences
+	        toteLift.setUpperLimit(canLift.getSetPoint() + 1000);
+	        canLift.setLowerLimit(toteLift.getSetPoint() );
 	                
 	        if(joystickOut.POVDirection == POVRIGHT)
 	        {
