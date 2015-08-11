@@ -1,4 +1,5 @@
-package lift;
+package org.usfirst.frc.team2635.robot;
+
 
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;

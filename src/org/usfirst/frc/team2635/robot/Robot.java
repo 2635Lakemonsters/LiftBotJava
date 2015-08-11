@@ -1,24 +1,10 @@
-
 package org.usfirst.frc.team2635.robot;
 
-import hdrive.HDrivePneumatic;
-import lift.Arms;
-import lift.LiftPositionSingleMotor;
-import lift.LiftPositionTwoMotor;
 
-import com.kauailabs.navx.frc.AHRS;
-
-import edu.wpi.first.wpilibj.CANTalon.ControlMode;
-import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.CANTalon;
-import edu.wpi.first.wpilibj.Joystick;
-import edu.wpi.first.wpilibj.Relay;
-import edu.wpi.first.wpilibj.SPI;
-import edu.wpi.first.wpilibj.SerialPort;
-import edu.wpi.first.wpilibj.Servo;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
@@ -84,7 +70,6 @@ public class Robot extends IterativeRobot
 	CANTalon frontLeft;
 	CANTalon middle;
 	DoubleSolenoid depressor;
-	AHRS navx;
 	
 	//Tote Carriage declarations
 	CANTalon toteLiftMotor1;
@@ -111,7 +96,6 @@ public class Robot extends IterativeRobot
 //	InputThread<Boolean> lightSpikeThread;
 	public void robotInit() 
     {
-        navx = new AHRS(SerialPort.Port.kMXP); 
 
     	rearLeft = new CANTalon(REARLEFTCHANNEL);
     	rearRight = new CANTalon(REARRIGHTCHANNEL);
@@ -136,7 +120,7 @@ public class Robot extends IterativeRobot
     	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
     	xboxController= new ScaledJoystick(0);
-    	hdrive = new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, depressor);
+    	hdrive = new HDrivePneumatic(frontLeft, frontRight, rearLeft, rearRight, middle, new MiddleWheelVbus(), depressor);
     	toteArms = new Arms(toteArmsSolenoid);
     	canArms = new Arms(canArmsSolenoid);
     }

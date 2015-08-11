@@ -1,6 +1,5 @@
 package org.usfirst.frc.team2635.robot;
 
-import java.util.concurrent.locks.Lock;
 
 
 public class Component<InputType>

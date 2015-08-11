@@ -1,4 +1,4 @@
-package lift;
+package org.usfirst.frc.team2635.robot;
 
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.CANTalon.ControlMode;

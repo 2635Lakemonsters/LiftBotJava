@@ -1,4 +1,4 @@
-package lift;
+package org.usfirst.frc.team2635.robot;
 
 
 import edu.wpi.first.wpilibj.CANTalon;
@@ -20,7 +20,7 @@ public class LiftPositionSingleMotor extends Lift
 	}
 	public LiftPositionSingleMotor(CANTalon lift1, boolean reverse, double initialP, double initialI, double initialD, double upperLimit, double lowerLimit)
 	{
-		super(lift1, reverse);
+		super(lift1);
 		//Convert lift motors from SpeedController to CANTalon to access pid functions
 		this.upperLimit = upperLimit;
 		this.lowerLimit = lowerLimit;
