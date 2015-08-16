@@ -1,6 +1,7 @@
 package org.usfirst.frc.team2635.robot;
 
 
+import edu.wpi.first.wpilibj.CANTalon.ControlMode;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.IterativeRobot;
@@ -55,13 +56,17 @@ public class Robot extends IterativeRobot
 	final int BUTTONUP = 3;
 	final int BUTTONDOWN = 0;
 	
-	final int toteSolenoidForward = 0;
-	final int toteSolenoidReverse = 1;
-	final int canSolenoidForward = 2;
-	final int canSolenoidReverse = 3;
+	final int TOTESOLENOIDFORWARD = 0;
+	final int TOTESOLENOIDREVERSE = 1;
+	final int CANSOLENOIDFORWARD = 2;
+	final int CANSOLENOIDREVERSE = 3;
 	
-	final int canGrabOpen = 1;
-	final int canGrabClose = 2;
+	final int CANGRABOPEN = 1;
+	final int CANGRABCLOSE = 2;
+	
+	//TODO: set button values to correct values
+	final int CONTROLMODEVBUS = 0;
+	final int CONTROLMODESPEED = 0;
 	//endregion
 	
 	//Drive System declarations
@@ -81,21 +86,51 @@ public class Robot extends IterativeRobot
 	CANTalon canLiftMotor1;
 	DoubleSolenoid canArmsSolenoid;
 	
-	//DigitalInput buttonInput;
-//	Servo servo;
-	//Relay lightSpike;
+
 	
-	ScaledJoystickOneShot xboxController;
+	ScaledJoystick xboxController;
+	OneShotRising<Integer> toteLiftPOVOneShot;
+	OneShotRising<Boolean> canLiftUpButtonOneShot;
+	OneShotRising<Boolean> canLiftDownButtonOneShot;
+	
 	HDrivePneumatic hdrive;
+	int scalingFactor;
+	OneShotRising<Boolean> driveModeVbusOneShot;
+	OneShotRising<Boolean> driveModeSpeedOneShot;
 	
 	Arms toteArms;
 	Arms canArms;
 	LiftPositionTwoMotor toteLift;
 	LiftPositionSingleMotor canLift;
-//	InputThread<Double> singleMotorThread;
-//	InputThread<Double> servoThread;
-//	InputThread<Boolean> lightSpikeThread;
-	public void robotInit() 
+
+	public int setDriveMode(CANTalon rearLeft, CANTalon rearRight, CANTalon frontRight, CANTalon frontLeft, ControlMode controlMode)
+	{
+		frontRight.changeControlMode(controlMode);
+		frontLeft.changeControlMode(controlMode);
+		rearLeft.changeControlMode(ControlMode.Follower);
+		rearRight.changeControlMode(ControlMode.Follower);
+		//Return the scaling factor
+		switch (controlMode)
+		{
+		case Current:
+			return 0;
+		case Disabled:
+			return 0;
+		case Follower:
+			return 0;
+		case PercentVbus:
+			return 1;
+		case Position:
+			return 10;
+		case Speed:
+			return 100;
+		case Voltage:
+			return 13;
+		default:
+			return 0;
+		}
+	}
+	public void robotInit()
     {
 
     	rearLeft = new CANTalon(REARLEFTCHANNEL);
@@ -110,18 +145,27 @@ public class Robot extends IterativeRobot
     	toteLiftMotor1.setPosition(0);
     	toteLiftMotor2 = new CANTalon(TOTELIFT2CHANNEL);
     	toteLiftMotor1.reverseSensor(true);
-    	toteArmsSolenoid = new DoubleSolenoid(toteSolenoidForward, toteSolenoidReverse);
+    	toteArmsSolenoid = new DoubleSolenoid(TOTESOLENOIDFORWARD, TOTESOLENOIDREVERSE);
     	
     	canLiftMotor1 = new CANTalon(CANLIFT1CHANNEL);
     	//Zero out encoder
     	canLiftMotor1.setPosition(0);
-    	canArmsSolenoid = new DoubleSolenoid(canSolenoidForward, canSolenoidReverse);
+    	canArmsSolenoid = new DoubleSolenoid(CANSOLENOIDFORWARD, CANSOLENOIDREVERSE);
     	
     	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, false, 1.0, 0, 0, 7400.0, 0.0);
     	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
-    	xboxController= new ScaledJoystickOneShot(0, new int[]{1, 3});
+    	xboxController= new ScaledJoystick(0);
+    	toteLiftPOVOneShot = new OneShotRising<Integer>(new Integer[]{POVUP, POVDOWN}, -1);
+    	canLiftUpButtonOneShot = new OneShotRising<Boolean>(true, false); 
+    	canLiftDownButtonOneShot = new OneShotRising<Boolean>(true, false);
+    	
     	hdrive = new HDrivePneumatic(new RobotDrive(frontLeft, frontRight, rearLeft, rearRight), new StandardArcadeDrive(), middle, new MiddleWheelVbus(), depressor);
+    	driveModeSpeedOneShot = new OneShotRising<Boolean>(true, false);
+    	driveModeVbusOneShot = new OneShotRising<Boolean>(true, false);
+    	
+    	scalingFactor = setDriveMode(rearLeft,rearRight,frontRight,frontLeft,ControlMode.PercentVbus);
+    	
     	toteArms = new Arms(toteArmsSolenoid);
     	canArms = new Arms(canArmsSolenoid);
     }
@@ -141,26 +185,27 @@ public class Robot extends IterativeRobot
     public void teleopPeriodic() 
     {
     	
-        JoystickData joystickOut = xboxController.getOutput(1.0);
+        JoystickData joystickOut = xboxController.getOutput(scalingFactor);
         
         if(joystickOut.connected)
         {
 	        hdrive.drive(joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
 	        
-	        if(joystickOut.POVDirection == POVDOWN)
+	        Integer toteLiftPOVState = toteLiftPOVOneShot.getValue(joystickOut.POVDirection);
+	        if(toteLiftPOVState == POVDOWN)
 	        {
 	        	toteLift.setSetPoint(toteLift.getSetPoint() - TOTELIFTINCREMENT);
 	        }
-	        else if(joystickOut.POVDirection == POVUP)
+	        else if(toteLiftPOVState == POVUP)
 	        {
 	        	toteLift.setSetPoint(toteLift.getSetPoint() + TOTELIFTINCREMENT);
 	        }
 	       
-	        if(joystickOut.buttons.get(BUTTONDOWN))
+	        if(canLiftDownButtonOneShot.getValue(joystickOut.buttons.get(BUTTONDOWN)))
 	        {
 	        	canLift.setSetPoint(canLift.getSetPoint() - CANLIFTINCREMENT);
 	        }
-	        else if (joystickOut.buttons.get(BUTTONUP))
+	        else if (canLiftDownButtonOneShot.getValue(joystickOut.buttons.get(BUTTONUP)))
 	        {
 	        	canLift.setSetPoint(canLift.getSetPoint() + CANLIFTINCREMENT);
 	        }
@@ -177,15 +222,27 @@ public class Robot extends IterativeRobot
 	        	toteArms.set(Value.kReverse);
 	        }
 	        
-	        if(joystickOut.buttons.get(canGrabOpen))
+	        if(joystickOut.buttons.get(CANGRABOPEN))
 	        {
 	        	canArms.set(Value.kForward);
 	        }
-	        else if (joystickOut.buttons.get(canGrabClose))
+	        else if (joystickOut.buttons.get(CANGRABCLOSE))
 	        {
 	        	canArms.set(Value.kReverse);
 	        }
-	        SmartDashboard.putNumber("CanLiftSetPoint:", canLift.getSetPoint());
+	        
+	        if(driveModeSpeedOneShot.getValue(joystickOut.buttons.get(CONTROLMODESPEED)))
+	        {
+	        	scalingFactor = setDriveMode(rearLeft, rearRight, frontRight, frontLeft, ControlMode.Speed);
+	        }
+	        if(driveModeVbusOneShot.getValue(joystickOut.buttons.get(CONTROLMODEVBUS)))
+	        {
+	        	scalingFactor = setDriveMode(rearLeft, rearRight, frontRight, frontLeft, ControlMode.PercentVbus);
+
+	        }
+        	
+	       
+	        SmartDashboard.putNumber("CanLiftSetPoint", canLift.getSetPoint());
 	        SmartDashboard.putNumber("ToteLiftSetPoint", toteLift.getSetPoint());
 	        
 	        SmartDashboard.putNumber("CanEncoder", canLiftMotor1.getEncPosition());

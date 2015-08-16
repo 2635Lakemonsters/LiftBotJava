@@ -3,7 +3,7 @@ package org.usfirst.frc.team2635.robot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-
+@Deprecated 
 public class ScaledJoystickOneShot extends ScaledJoystick
 {
 	int[] oneShotIndexes;
