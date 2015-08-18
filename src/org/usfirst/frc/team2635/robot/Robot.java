@@ -1,11 +1,15 @@
 package org.usfirst.frc.team2635.robot;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 import edu.wpi.first.wpilibj.CANTalon.ControlMode;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
 import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.CANTalon;
+import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotDrive;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -64,9 +68,8 @@ public class Robot extends IterativeRobot
 	final int CANGRABOPEN = 1;
 	final int CANGRABCLOSE = 2;
 	
-	//TODO: set button values to correct values
-	final int CONTROLMODEVBUS = 0;
-	final int CONTROLMODESPEED = 0;
+	final int CONTROLMODEVBUS = 6;
+	final int CONTROLMODESPEED = 7;
 	//endregion
 	
 	//Drive System declarations
@@ -94,7 +97,7 @@ public class Robot extends IterativeRobot
 	OneShotRising<Boolean> canLiftDownButtonOneShot;
 	
 	HDrivePneumatic hdrive;
-	int scalingFactor;
+	double scalingFactor;
 	OneShotRising<Boolean> driveModeVbusOneShot;
 	OneShotRising<Boolean> driveModeSpeedOneShot;
 	
@@ -103,31 +106,44 @@ public class Robot extends IterativeRobot
 	LiftPositionTwoMotor toteLift;
 	LiftPositionSingleMotor canLift;
 
-	public int setDriveMode(CANTalon rearLeft, CANTalon rearRight, CANTalon frontRight, CANTalon frontLeft, ControlMode controlMode)
+	Preferences preferences;
+	public double setDriveMode(CANTalon rearLeft, CANTalon rearRight, CANTalon frontRight, CANTalon frontLeft, ControlMode controlMode, double p, double i, double d)
 	{
 		frontRight.changeControlMode(controlMode);
+		frontRight.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
+		frontRight.setPID(p, i, d);
+		frontRight.set(0.0);
+		
 		frontLeft.changeControlMode(controlMode);
-		rearLeft.changeControlMode(ControlMode.Follower);
-		rearRight.changeControlMode(ControlMode.Follower);
+		frontLeft.setFeedbackDevice(CANTalon.FeedbackDevice.QuadEncoder);
+		frontLeft.setPID(p, i, d);
+		frontLeft.set(0.0);
+		
+
+		rearLeft.changeControlMode(controlMode);
+		rearLeft.set((double)frontLeft.getDeviceID());
+		
+		rearRight.changeControlMode(controlMode);
+		rearRight.set((double)rearLeft.getDeviceID());
 		//Return the scaling factor
 		switch (controlMode)
 		{
 		case Current:
-			return 0;
+			return 0.0;
 		case Disabled:
-			return 0;
+			return 0.0;
 		case Follower:
-			return 0;
+			return 0.0;
 		case PercentVbus:
-			return 1;
+			return 1.0;
 		case Position:
-			return 10;
+			return 10.0;
 		case Speed:
-			return 100;
+			return 1000.0;
 		case Voltage:
-			return 13;
+			return 13.0;
 		default:
-			return 0;
+			return 0.0;
 		}
 	}
 	public void robotInit()
@@ -156,18 +172,20 @@ public class Robot extends IterativeRobot
     	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
     	
     	xboxController= new ScaledJoystick(0);
-    	toteLiftPOVOneShot = new OneShotRising<Integer>(new Integer[]{POVUP, POVDOWN}, -1);
+    	toteLiftPOVOneShot = new OneShotRising<Integer>(new ArrayList<Integer>(Arrays.asList(POVUP, POVDOWN)), -1);
     	canLiftUpButtonOneShot = new OneShotRising<Boolean>(true, false); 
     	canLiftDownButtonOneShot = new OneShotRising<Boolean>(true, false);
     	
-    	hdrive = new HDrivePneumatic(new RobotDrive(frontLeft, frontRight, rearLeft, rearRight), new StandardArcadeDrive(), middle, new MiddleWheelVbus(), depressor);
+    	hdrive = new HDrivePneumatic(new RobotDrive(frontLeft, frontRight, rearLeft, rearRight), new StandardArcadeDrive(), middle, new MiddleWheelVbus(), depressor , 1);
     	driveModeSpeedOneShot = new OneShotRising<Boolean>(true, false);
     	driveModeVbusOneShot = new OneShotRising<Boolean>(true, false);
     	
-    	scalingFactor = setDriveMode(rearLeft,rearRight,frontRight,frontLeft,ControlMode.PercentVbus);
+    	scalingFactor = setDriveMode(rearLeft,rearRight,frontRight,frontLeft,ControlMode.PercentVbus, SmartDashboard.getNumber("P", 0),SmartDashboard.getNumber("I", 0),SmartDashboard.getNumber("D", 0));
     	
     	toteArms = new Arms(toteArmsSolenoid);
     	canArms = new Arms(canArmsSolenoid);
+    	
+    	preferences = Preferences.getInstance();
     }
 
     /**
@@ -185,6 +203,7 @@ public class Robot extends IterativeRobot
     public void teleopPeriodic() 
     {
     	
+    	
         JoystickData joystickOut = xboxController.getOutput(scalingFactor);
         
         if(joystickOut.connected)
@@ -192,6 +211,7 @@ public class Robot extends IterativeRobot
 	        hdrive.drive(joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
 	        
 	        Integer toteLiftPOVState = toteLiftPOVOneShot.getValue(joystickOut.POVDirection);
+	       
 	        if(toteLiftPOVState == POVDOWN)
 	        {
 	        	toteLift.setSetPoint(toteLift.getSetPoint() - TOTELIFTINCREMENT);
@@ -233,30 +253,31 @@ public class Robot extends IterativeRobot
 	        
 	        if(driveModeSpeedOneShot.getValue(joystickOut.buttons.get(CONTROLMODESPEED)))
 	        {
-	        	scalingFactor = setDriveMode(rearLeft, rearRight, frontRight, frontLeft, ControlMode.Speed);
+	        	scalingFactor = setDriveMode(rearLeft, rearRight, frontRight, frontLeft, ControlMode.Speed, preferences.getDouble("P", 0), preferences.getDouble("I", 0), preferences.getDouble("D", 0));
+	        	hdrive.setScaler(scalingFactor);
 	        }
 	        if(driveModeVbusOneShot.getValue(joystickOut.buttons.get(CONTROLMODEVBUS)))
 	        {
-	        	scalingFactor = setDriveMode(rearLeft, rearRight, frontRight, frontLeft, ControlMode.PercentVbus);
-
+	        	scalingFactor = setDriveMode(rearLeft, rearRight, frontRight, frontLeft, ControlMode.PercentVbus, 0, 0, 0);
+	        	hdrive.setScaler(scalingFactor);
 	        }
         	
 	       
 	        SmartDashboard.putNumber("CanLiftSetPoint", canLift.getSetPoint());
 	        SmartDashboard.putNumber("ToteLiftSetPoint", toteLift.getSetPoint());
-	        
+	        SmartDashboard.putNumber("TalonP", frontRight.getP());
 	        SmartDashboard.putNumber("CanEncoder", canLiftMotor1.getEncPosition());
 	        SmartDashboard.putNumber("ToteEncoder", toteLiftMotor1.getEncPosition());
 	        for(int i = 0; i < joystickOut.axes.size(); i++)
 	        {
 	        	SmartDashboard.putNumber("axis " + i, joystickOut.axes.get(i));
 	        }
-	        for(int i = 0; i < xboxController.getOutput(1.0).buttons.size(); i++)
+	        for(int i = 0; i < xboxController.getOutput(scalingFactor).buttons.size(); i++)
 	        {
 	        	SmartDashboard.putBoolean("button " + i, joystickOut.buttons.get(i));
 	        }
-	        SmartDashboard.putNumber("POV", (double)joystickOut.POVDirection);
-	        
+	        SmartDashboard.putNumber("POV", (double) toteLiftPOVState);
+	        SmartDashboard.putNumber("ScalingFactor", scalingFactor);
         }
     }
     

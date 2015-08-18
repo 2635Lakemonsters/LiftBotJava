@@ -12,9 +12,9 @@ public class HDrivePneumatic
 	IDrive driveStrategy;
 	RobotDrive drive;
 	DoubleSolenoid depressor;
-	final double MIDDLE_WHEEL_JOYSTICK_TOLERANCE = 0.1;
+	double MIDDLE_WHEEL_JOYSTICK_TOLERANCE = 0.1;
 	public HDrivePneumatic(RobotDrive drive, IDrive driveStrategy, SpeedController middleWheel, IActuator middleWheelStrategy,
-			DoubleSolenoid depressor)
+			DoubleSolenoid depressor, double scaler)
 	{
 		this.middleWheel = middleWheel;
 		this.middleWheelStrategy = middleWheelStrategy;
@@ -23,6 +23,7 @@ public class HDrivePneumatic
 
 		this.drive = drive;
 		this.driveStrategy = driveStrategy;
+		this.MIDDLE_WHEEL_JOYSTICK_TOLERANCE = 0.1 * scaler;
 	}
 	
 	/**
@@ -33,6 +34,11 @@ public class HDrivePneumatic
 	 * @param Y Chassis Forward and backward
 	 * @param rotation Chassis rotation 
 	 */
+	public void setScaler(double scaler)
+	{
+		MIDDLE_WHEEL_JOYSTICK_TOLERANCE = 0.1 * scaler;
+		
+	}
 	public void drive(double X, double Y, double rotation)
 	{
 		if(X > MIDDLE_WHEEL_JOYSTICK_TOLERANCE || X < -MIDDLE_WHEEL_JOYSTICK_TOLERANCE)

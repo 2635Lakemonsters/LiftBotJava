@@ -8,16 +8,21 @@ public class OneShotRising<T>
 	ArrayList<T> risingValues;
 	T fallingValue;
 	boolean triggered = false;
+	public OneShotRising(T risingValue, T fallingValue)
+	{
+		this.risingValues = new ArrayList<T>(Arrays.asList(risingValue));
+		this.fallingValue = fallingValue;
+	}
 	public OneShotRising(ArrayList<T> risingValues, T fallingValue)
 	{
 		this.risingValues = risingValues;
 		this.fallingValue = fallingValue;
 	}
 	/**
-	 * Will perform one shot logic on the value passed to it. 
-	 * 
-	 * @param currentValue
-	 * @return
+	 * Will perform one shot logic on the value passed to it. Values that are in between rising
+	 * and falling will be treated as falling values
+	 * @param currentValue 
+	 * @return The rising or falling value
 	 */
 	public T getValue(T currentValue)
 	{
