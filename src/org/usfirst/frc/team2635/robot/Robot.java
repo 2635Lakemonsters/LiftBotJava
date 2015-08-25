@@ -4,6 +4,8 @@ package org.usfirst.frc.team2635.robot;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.kauailabs.navx.frc.AHRS;
+
 import edu.wpi.first.wpilibj.CANTalon.ControlMode;
 import edu.wpi.first.wpilibj.DoubleSolenoid;
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -11,6 +13,7 @@ import edu.wpi.first.wpilibj.IterativeRobot;
 import edu.wpi.first.wpilibj.CANTalon;
 import edu.wpi.first.wpilibj.Preferences;
 import edu.wpi.first.wpilibj.RobotDrive;
+import edu.wpi.first.wpilibj.SerialPort.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
@@ -79,6 +82,7 @@ public class Robot extends IterativeRobot
 	CANTalon frontLeft;
 	CANTalon middle;
 	DoubleSolenoid depressor;
+	AHRS navx;
 	
 	//Tote Carriage declarations
 	CANTalon toteLiftMotor1;
@@ -121,10 +125,12 @@ public class Robot extends IterativeRobot
 		
 
 		rearLeft.changeControlMode(controlMode);
-		rearLeft.set((double)frontLeft.getDeviceID());
+		rearLeft.setPID(p, i, d);
+		rearLeft.set(0.0);
 		
 		rearRight.changeControlMode(controlMode);
-		rearRight.set((double)rearLeft.getDeviceID());
+		rearRight.setPID(p, i, d);
+		rearRight.set(0.0);
 		//Return the scaling factor
 		switch (controlMode)
 		{
@@ -176,7 +182,8 @@ public class Robot extends IterativeRobot
     	canLiftUpButtonOneShot = new OneShotRising<Boolean>(true, false); 
     	canLiftDownButtonOneShot = new OneShotRising<Boolean>(true, false);
     	
-    	hdrive = new HDrivePneumatic(new RobotDrive(frontLeft, frontRight, rearLeft, rearRight), new StandardArcadeDrive(), middle, new MiddleWheelVbus(), depressor , 1);
+    	navx = new AHRS(Port.kMXP);
+    	hdrive = new HDrivePneumatic(navx, new RobotDrive(frontLeft, frontRight, rearLeft, rearRight), new StandardArcadeDrive(), middle, new MiddleWheelVbus(), depressor , 1);
     	driveModeSpeedOneShot = new OneShotRising<Boolean>(true, false);
     	driveModeVbusOneShot = new OneShotRising<Boolean>(true, false);
     	
@@ -278,6 +285,7 @@ public class Robot extends IterativeRobot
 	        }
 	        SmartDashboard.putNumber("POV", (double) toteLiftPOVState);
 	        SmartDashboard.putNumber("ScalingFactor", scalingFactor);
+	        SmartDashboard.putNumber("NavxWrapped", Utilities.wrapPosNeg180(navx.getYaw()));
         }
     }
     
