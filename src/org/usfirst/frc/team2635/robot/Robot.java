@@ -42,11 +42,11 @@ public class Robot extends IterativeRobot
 	final int TOTELIFT1CHANNEL = 8;
 	final int TOTELIFT2CHANNEL = 9;
 	
-	final double TOTELIFTINCREMENT = 2000.0;
+	final double TOTELIFTINCREMENT = 200.0;//2500.0;
 	
 	final int CANLIFT1CHANNEL = 7;
 	
-	final double CANLIFTINCREMENT = 2000.0;
+	final double CANLIFTINCREMENT = 200.0;//1800.0;
 	
 	final int YAXIS = 1;
 	final int XAXIS = 4;
@@ -111,6 +111,8 @@ public class Robot extends IterativeRobot
 	LiftPositionSingleMotor canLift;
 
 	Preferences preferences;
+	double previousAngle = 0.0;
+	AngleUnwrap unwrap = new AngleUnwrap();
 	public double setDriveMode(CANTalon rearLeft, CANTalon rearRight, CANTalon frontRight, CANTalon frontLeft, ControlMode controlMode, double p, double i, double d)
 	{
 		frontRight.changeControlMode(controlMode);
@@ -167,15 +169,18 @@ public class Robot extends IterativeRobot
     	toteLiftMotor1.setPosition(0);
     	toteLiftMotor2 = new CANTalon(TOTELIFT2CHANNEL);
     	toteLiftMotor1.reverseSensor(true);
+    	
     	toteArmsSolenoid = new DoubleSolenoid(TOTESOLENOIDFORWARD, TOTESOLENOIDREVERSE);
     	
     	canLiftMotor1 = new CANTalon(CANLIFT1CHANNEL);
     	//Zero out encoder
     	canLiftMotor1.setPosition(0);
+    	canLiftMotor1.reverseOutput(true);
+    	
     	canArmsSolenoid = new DoubleSolenoid(CANSOLENOIDFORWARD, CANSOLENOIDREVERSE);
     	
-    	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, false, 1.0, 0, 0, 7400.0, 0.0);
-    	canLift = new LiftPositionSingleMotor(canLiftMotor1, true, 1.0, 0, 0, 7400.0, 0.0);
+    	toteLift = new LiftPositionTwoMotor(toteLiftMotor1, toteLiftMotor2, 1.0, 0, 0, 7400.0, 0.0);
+    	canLift = new LiftPositionSingleMotor(canLiftMotor1, 1.0, 0, 0, 7400.0, 0.0);
     	
     	xboxController= new ScaledJoystick(0);
     	toteLiftPOVOneShot = new OneShotRising<Integer>(new ArrayList<Integer>(Arrays.asList(POVUP, POVDOWN)), -1);
@@ -215,9 +220,9 @@ public class Robot extends IterativeRobot
         
         if(joystickOut.connected)
         {
-	        hdrive.drive(joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), joystickOut.axes.get(ROTATION));
+	        hdrive.drive(joystickOut.axes.get(XAXIS), joystickOut.axes.get(YAXIS), -joystickOut.axes.get(ROTATION));
 	        
-	        Integer toteLiftPOVState = toteLiftPOVOneShot.getValue(joystickOut.POVDirection);
+	        Integer toteLiftPOVState = joystickOut.POVDirection;//toteLiftPOVOneShot.getValue(joystickOut.POVDirection);
 	       
 	        if(toteLiftPOVState == POVDOWN)
 	        {
@@ -228,16 +233,16 @@ public class Robot extends IterativeRobot
 	        	toteLift.setSetPoint(toteLift.getSetPoint() + TOTELIFTINCREMENT);
 	        }
 	       
-	        if(canLiftDownButtonOneShot.getValue(joystickOut.buttons.get(BUTTONDOWN)))
+	        if( joystickOut.buttons.get(BUTTONDOWN))//canLiftDownButtonOneShot.getValue(joystickOut.buttons.get(BUTTONDOWN)))
 	        {
 	        	canLift.setSetPoint(canLift.getSetPoint() - CANLIFTINCREMENT);
 	        }
-	        else if (canLiftDownButtonOneShot.getValue(joystickOut.buttons.get(BUTTONUP)))
+	        else if (joystickOut.buttons.get(BUTTONUP))//canLiftDownButtonOneShot.getValue(joystickOut.buttons.get(BUTTONUP)))
 	        {
 	        	canLift.setSetPoint(canLift.getSetPoint() + CANLIFTINCREMENT);
 	        }
 	        //Offset for gearing differences
-	        toteLift.setUpperLimit(canLift.getSetPoint() + 1000);
+	        toteLift.setUpperLimit(canLift.getSetPoint() );
 	        canLift.setLowerLimit(toteLift.getSetPoint() );
 	                
 	        if(joystickOut.POVDirection == POVRIGHT)
@@ -273,8 +278,12 @@ public class Robot extends IterativeRobot
 	        SmartDashboard.putNumber("CanLiftSetPoint", canLift.getSetPoint());
 	        SmartDashboard.putNumber("ToteLiftSetPoint", toteLift.getSetPoint());
 	        SmartDashboard.putNumber("TalonP", frontRight.getP());
+	        
 	        SmartDashboard.putNumber("CanEncoder", canLiftMotor1.getEncPosition());
 	        SmartDashboard.putNumber("ToteEncoder", toteLiftMotor1.getEncPosition());
+	        
+	        SmartDashboard.putNumber("POV State", toteLiftPOVState);
+	        
 	        for(int i = 0; i < joystickOut.axes.size(); i++)
 	        {
 	        	SmartDashboard.putNumber("axis " + i, joystickOut.axes.get(i));
@@ -283,9 +292,14 @@ public class Robot extends IterativeRobot
 	        {
 	        	SmartDashboard.putBoolean("button " + i, joystickOut.buttons.get(i));
 	        }
-	        SmartDashboard.putNumber("POV", (double) toteLiftPOVState);
+	        SmartDashboard.putNumber("POV", joystickOut.POVDirection);
 	        SmartDashboard.putNumber("ScalingFactor", scalingFactor);
-	        SmartDashboard.putNumber("NavxWrapped", Utilities.wrapPosNeg180(navx.getYaw()));
+	        double angle = navx.getAngle();
+	        
+	        SmartDashboard.putNumber("Actual Angle", angle);
+			SmartDashboard.putNumber("Angle", unwrap.unwrap(angle, 360));
+			previousAngle = angle;
+
         }
     }
     

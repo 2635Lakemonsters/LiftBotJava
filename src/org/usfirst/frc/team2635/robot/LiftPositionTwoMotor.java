@@ -6,11 +6,11 @@ import edu.wpi.first.wpilibj.CANTalon.ControlMode;
 public class LiftPositionTwoMotor extends LiftPositionSingleMotor
 {
 	CANTalon CANLift2;
-	public LiftPositionTwoMotor(CANTalon lift1, CANTalon lift2, boolean reverse,
+	public LiftPositionTwoMotor(CANTalon lift1, CANTalon lift2,
 			double initialP, double initialI, double initialD,
 			double upperLimit, double lowerLimit)
 	{
-		super(lift1, reverse, initialP, initialI, initialD, upperLimit, lowerLimit);
+		super(lift1, initialP, initialI, initialD, upperLimit, lowerLimit);
 		CANLift2 = (CANTalon) lift2;
 		CANLift2.setPID(initialP, initialI, initialD);
 		CANLift2.changeControlMode(ControlMode.Follower);

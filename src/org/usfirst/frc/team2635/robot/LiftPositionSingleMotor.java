@@ -18,7 +18,7 @@ public class LiftPositionSingleMotor extends Lift
 	{
 		this.overrideLimits = overrideLimits;
 	}
-	public LiftPositionSingleMotor(CANTalon lift1, boolean reverse, double initialP, double initialI, double initialD, double upperLimit, double lowerLimit)
+	public LiftPositionSingleMotor(CANTalon lift1, double initialP, double initialI, double initialD, double upperLimit, double lowerLimit)
 	{
 		super(lift1);
 		//Convert lift motors from SpeedController to CANTalon to access pid functions
@@ -29,7 +29,6 @@ public class LiftPositionSingleMotor extends Lift
 		
 		setPID(initialP, initialI, initialD);
 		CANLift1.changeControlMode(ControlMode.Position);
-		CANLift1.reverseOutput(reverse);
 	}
 	public double getUpperLimit()
 	{

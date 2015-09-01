@@ -2,10 +2,15 @@ package org.usfirst.frc.team2635.robot;
 
 public class Utilities 
 {
-
-	  public static double wrapPosNeg180(double fAng) 
+	  
+	  public static double unwrap(double previousAngle, double currentAngle, double tolerance) 
 	  {
-	     return fAng - 360 * Math.floor((fAng + 180) / 360);
+		  double delta = currentAngle - previousAngle;
+		  if(Math.abs(delta) > tolerance)
+		  {
+			  return currentAngle + (delta - tolerance);
+		  }
+		  return currentAngle + delta;
 
 	  }
 }

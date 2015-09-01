@@ -26,13 +26,16 @@ public class OneShotRising<T>
 	 */
 	public T getValue(T currentValue)
 	{
-		if(triggered)
+		if(triggered)                                     
 		{	
 			for(T value : risingValues)
 			{
+				System.out.println("Rising" + value);
+				System.out.println("Rising Current" + currentValue);
 				//trigger has been hit, and is still being hit. Return falling value
 				if(value == currentValue)
 				{
+					System.out.println("Rising, hit");
 					return fallingValue;
 				}
 				
@@ -49,6 +52,8 @@ public class OneShotRising<T>
 				//trigger has been hit, return rising value and set triggered to true
 				if(value == currentValue)
 				{
+					System.out.println(value);
+					System.out.println("Fallen, hit");
 					triggered = true;
 					return value;
 				}

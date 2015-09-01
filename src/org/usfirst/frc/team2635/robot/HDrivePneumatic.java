@@ -57,6 +57,7 @@ public class HDrivePneumatic
 	}
 	public void drive(double X, double Y, double rotation)
 	{
+		
 		switch(state)
 		{
 		case MIDDLEWHEELDOWN:
@@ -79,7 +80,7 @@ public class HDrivePneumatic
 			{
 				
 
-				middleWheelPid.setSetpoint(Utilities.wrapPosNeg180(gyroscope.getYaw()));
+				//middleWheelPid.setSetpoint(Utilities.unwrap(gyroscope.getYaw()));
 				middleWheelPid.enable();
 				state = DriveState.MIDDLEWHEELDOWN;
 			
